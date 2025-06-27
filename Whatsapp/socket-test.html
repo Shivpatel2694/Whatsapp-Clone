@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Socket Test</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>Socket Connection Test</h1>
+    <div id="status">Connecting...</div>
+    <div id="messages"></div>
+    
+    <script>
+        const socket = io('ws://localhost:9000');
+        const status = document.getElementById('status');
+        const messages = document.getElementById('messages');
+        
+        socket.on('connect', () => {
+            status.innerHTML = '✅ Connected to socket server';
+            console.log('Connected:', socket.id);
+            
+            // Test user registration
+            socket.emit('addUsers', {
+                sub: 'test123',
+                name: 'Test User'
+            });
+        });
+        
+        socket.on('disconnect', () => {
+            status.innerHTML = '❌ Disconnected from socket server';
+        });
+        
+        socket.on('getUsers', (users) => {
+            messages.innerHTML += '<br>👥 Users: ' + users.length;
+            console.log('Users:', users);
+        });
+        
+        socket.on('getMessage', (data) => {
+            messages.innerHTML += '<br>📨 Message: ' + JSON.stringify(data);
+            console.log('Message received:', data);
+        });
+        
+        socket.on('connect_error', (error) => {
+            status.innerHTML = '❌ Connection error: ' + error.message;
+            console.error('Connection error:', error);
+        });
+    </script>
+</body>
+</html>

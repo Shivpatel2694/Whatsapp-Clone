@@ -34,16 +34,28 @@ const Messages = ({person, conversation})=>{
 
     const scrollRef = useRef();
 
-    const {account, socket, newMessageFlag, setnewMessageFlag} = useContext(AccountContext);
+    const {account, socket, newMessageFlag} = useContext(AccountContext);
 
     useEffect(()=>{
-        socket.current.on('getMessage', data=>{
+        const handleGetMessage = (data) => {
+            console.log('📨 Received message:', data);
             setIncomingMessage({
                 ...data,
                 createdAt: Date.now()
-            })
-        })
-    }, []);
+            });
+        };
+
+        const socketRef = socket.current;
+        if (socketRef) {
+            socketRef.on('getMessage', handleGetMessage);
+        }
+
+        return () => {
+            if (socketRef) {
+                socketRef.off('getMessage', handleGetMessage);
+            }
+        };
+    }, [socket]);
 
     useEffect(()=>{
         const getMessageDetails = async()=>{
@@ -58,13 +70,18 @@ const Messages = ({person, conversation})=>{
     }, [messages]);
 
     useEffect(()=>{
-        incomingMessage && conversation?.members?.includes(incomingMessage.senderId) && 
-            setMessages(prev => [...prev, incomingMessage])
-    }, [incomingMessage, conversation]);
+        if (incomingMessage && conversation?.members?.includes(incomingMessage.senderId)) {
+            // Only add message if it's not from the current user (to avoid duplicates)
+            if (incomingMessage.senderId !== account.sub) {
+                console.log('📥 Adding incoming message from:', incomingMessage.senderId);
+                setMessages(prev => [...prev, incomingMessage]);
+            }
+        }
+    }, [incomingMessage, conversation, account.sub]);
 
     const sendText = async (e) => {
        const code =  e.keyCode || e.which;
-       if(code==13){
+       if(code === 13){
         let message={};
         if(!file){
             message = {
@@ -84,14 +101,24 @@ const Messages = ({person, conversation})=>{
             }
         }
 
+        // Add message immediately to UI for sender
+        const messageWithTimestamp = {
+            ...message,
+            createdAt: Date.now()
+        };
+        setMessages(prev => [...prev, messageWithTimestamp]);
+
+        // Send via socket
+        console.log('📤 Sending message:', message);
         socket.current.emit('sendMessage', message);
         
+        // Save to database
         await newMessage(message);
 
         setValue('');
         setFile('');
         setImage('');
-        setnewMessageFlag(prev => !prev);
+        // Don't use newMessageFlag since we're updating messages directly
 
        }
     }
@@ -99,8 +126,8 @@ const Messages = ({person, conversation})=>{
         <Wrapper>
             <Component>
                 {
-                    messages && messages.map(message => (
-                        <Container ref={scrollRef}>
+                    messages && messages.map((message, index) => (
+                        <Container key={message._id || message.createdAt || index} ref={scrollRef}>
                             <Message message={message}/>
                         </Container>
                     ))

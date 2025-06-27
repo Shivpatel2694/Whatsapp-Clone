@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState, userContext } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import { getUsers } from "../../../service/api";
 import { AccountContext } from "../../../context/AccountProvider";
@@ -21,7 +21,7 @@ const StyledDivider = styled(Divider)`
 const Conversations = ({text}) => {
   const [users, setUsers] = useState([]);
 
-  const { account, socket, setActiveUsers} = useContext(AccountContext);
+  const { account } = useContext(AccountContext);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,13 +31,6 @@ const Conversations = ({text}) => {
     };
     fetchData();
   }, [text]);
-
-  useEffect(()=>{
-    socket.current.emit('addUsers', account);
-    socket.current.on('getUsers', users => {
-      setActiveUsers(users);
-    })
-  }, [account]);
 
   return (
     <Component>

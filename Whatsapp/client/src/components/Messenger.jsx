@@ -1,6 +1,6 @@
 import { useContext } from "react";
 
-import { AppBar, Toolbar, styled, Box } from "@mui/material";
+import { AppBar, Toolbar, styled, Box, CircularProgress } from "@mui/material";
 
 import { AccountContext } from "../context/AccountProvider";
 
@@ -24,7 +24,20 @@ const LoginHeader = styled(AppBar)`
 `;
 
 const Messenger = () => {
-  const { account } = useContext(AccountContext);
+  const { account, isLoading } = useContext(AccountContext);
+
+  if (isLoading) {
+    return (
+      <Component>
+        <LoginHeader>
+          <Toolbar></Toolbar>
+        </LoginHeader>
+        <Box display="flex" justifyContent="center" alignItems="center" height="60vh">
+          <CircularProgress />
+        </Box>
+      </Component>
+    );
+  }
 
   return (
     <Component>

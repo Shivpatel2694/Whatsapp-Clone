@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 
 import { MoreVert } from "@mui/icons-material";
 import { Menu, MenuItem, styled } from "@mui/material";
+import { AccountContext } from "../../../context/AccountProvider";
 
 const MenuOption = styled(MenuItem)`
   font-size: 14px;
@@ -11,12 +12,18 @@ const MenuOption = styled(MenuItem)`
 
 const HeaderMenu = ({ setOpenDrawer }) => {
   const [open, setOpen] = useState(null);
+  const { logout } = useContext(AccountContext);
 
   const handleClose = () => {
     setOpen(null);
   };
   const handleClick = (e) => {
     setOpen(e.currentTarget);
+  };
+
+  const handleLogout = () => {
+    handleClose();
+    logout();
   };
 
   return (
@@ -43,6 +50,9 @@ const HeaderMenu = ({ setOpenDrawer }) => {
           }}
         >
           Profile
+        </MenuOption>
+        <MenuOption onClick={handleLogout}>
+          Logout
         </MenuOption>
       </Menu>
     </>
